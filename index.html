@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestão de Ativos - Web</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    :root {
+      --bg-main: #1e1e2e;
+      --bg-card: #181825;
+      --bg-input: #313244;
+      --border: #45475a;
+      --border-subtle: #313244;
+      --text: #cdd6f4;
+      --text-muted: #a6adc8;
+      --white: #ffffff;
+      --blue: #89b4fa;
+      --blue-hover: #b4befe;
+      --red: #f38ba8;
+      --red-hover: #eba0ac;
+      --green: #a6e3a1;
+      --green-hover: #94e2d5;
+      --yellow: #f9e2af;
+      --yellow-hover: #fab387;
+      --purple: #cba6f7;
+      --purple-hover: #f5c2e7;
+      --cyan: #74c7ec;
+      --cyan-hover: #89dceb;
+      --gray-btn: #585b70;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      padding: 16px;
+      line-height: 1.4;
+    }
+
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .cabecalho-empresa {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .empresa-esquerda {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .logo-box {
+      width: 68px;
+      height: 68px;
+      background-color: var(--bg-input);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-weight: bold;
+      font-size: 11px;
+      text-align: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .logo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .empresa-info h1 {
+      font-size: 18px;
+      color: var(--white);
+      margin-bottom: 3px;
+    }
+
+    .empresa-info p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    input, select {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 10px;
+      color: var(--white);
+      font-size: 14px;
+      width: 100%;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--blue);
+    }
+
+    button {
+      background-color: var(--blue);
+      color: #11111b;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      padding: 9px 14px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background-color 0.15s;
+      white-space: nowrap;
+    }
+
+    button:hover { background-color: var(--blue-hover); }
+    .btn-excluir { background-color: var(--red); }
+    .btn-excluir:hover { background-color: var(--red-hover); }
+    .btn-exportar { background-color: var(--green); }
+    .btn-exportar:hover { background-color: var(--green-hover); }
+    .btn-leitor { background-color: var(--yellow); }
+    .btn-leitor:hover { background-color: var(--yellow-hover); }
+    .btn-pdf { background-color: var(--purple); }
+    .btn-pdf:hover { background-color: var(--purple-hover); }
+    .btn-config { background-color: var(--cyan); }
+    .btn-config:hover { background-color: var(--cyan-hover); }
+    .btn-cancelar { background-color: var(--gray-btn); color: var(--white); }
+    .btn-cancelar:hover { opacity: 0.9; }
+
+    .barra-topo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .busca-grupo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .resumo {
+      font-weight: bold;
+      color: var(--green);
+      margin-left: auto;
+    }
+
+    .card-form {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .grid-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      align-items: end;
+    }
+
+    .campo {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .campo label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .input-com-botao {
+      display: flex;
+      gap: 6px;
+    }
+
+    .input-com-botao button {
+      padding: 9px 11px;
+      flex-shrink: 0;
+    }
+
+    .acoes-form {
+      display: flex;
+      gap: 8px;
+    }
+
+    .acoes-form button {
+      flex: 1;
+      height: 38px;
+    }
+
+    .tabela-wrapper {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th {
+      background-color: var(--bg-input);
+      color: var(--text);
+      padding: 10px;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    td {
+      padding: 9px 10px;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 13px;
+    }
+
+    tr:nth-child(even) {
+      background-color: var(--bg-main);
+    }
+
+    tbody tr {
+      cursor: pointer;
+    }
+
+    tbody tr:hover {
+      background-color: #2a2b3d;
+    }
+
+    tbody tr.selecionada {
+      background-color: var(--border);
+      color: var(--white);
+    }
+
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+
+    .rodape {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .dica {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .acoes-rodape {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+
+    .modal-overlay.ativo {
+      display: flex;
+    }
+
+    .modal {
+      background-color: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal h2 {
+      font-size: 16px;
+      color: var(--white);
+    }
+
+    .modal-botoes {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    #leitor-camera-box {
+      width: 100%;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #000000;
+    }
+
+    .status-camera {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .preview-logo-modal {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .preview-logo-modal img {
+      max-height: 48px;
+      max-width: 120px;
+      border-radius: 4px;
+      background: var(--bg-input);
+      padding: 4px;
+    }
+
+    #area-impressao {
+      display: none;
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 10px; }
+      .resumo { width: 100%; margin-left: 0; }
+      .acoes-rodape { width: 100%; }
+      .acoes-rodape button { flex: 1; }
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #222222 !important;
+        padding: 0;
+      }
+      .container, .modal-overlay {
+        display: none !important;
+      }
+      #area-impressao {
+        display: block !important;
+        font-family: Arial, sans-serif;
+        color: #222222;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="cabecalho-empresa">
+    <div class="empresa-esquerda">
+      <div class="logo-box" id="logo-app">SEM<br>LOGO</div>
+      <div class="empresa-info">
+        <h1 id="nome-empresa-app">Minha Empresa</h1>
+        <p id="detalhes-empresa-app">Clique em 'Empresa / Logo' para configurar CNPJ e endereço.</p>
+      </div>
+    </div>
+    <button type="button" class="btn-config" id="btn-abrir-empresa">Empresa / Logo</button>
+  </div>
+
+  <div class="barra-topo">
+    <div class="busca-grupo">
+      <input type="text" id="input-busca" placeholder="Bipe o código de barras ou digite para filtrar..." />
+      <button type="button" class="btn-leitor" id="btn-ler-busca">Ler Câmera</button>
+      <button type="button" class="btn-leitor" id="btn-foco-leitor">Leitor (F2)</button>
+    </div>
+    <div class="resumo" id="lbl-resumo">Total: 0 ativos | Patrimônio: R$ 0,00</div>
+  </div>
+
+  <div class="card-form">
+    <div class="grid-form">
+      <div class="campo">
+        <label>Código / Patrimônio *</label>
+        <div class="input-com-botao">
+          <input type="text" id="input-patrimonio" placeholder="Bipe ou digite *" />
+          <button type="button" class="btn-leitor" id="btn-ler-form" title="Ler com câmera">Câm</button>
+        </div>
+      </div>
+      <div class="campo">
+        <label>Nome do Ativo *</label>
+        <input type="text" id="input-nome" placeholder="Ex: Notebook Dell *" />
+      </div>
+      <div class="campo">
+        <label>Categoria</label>
+        <input type="text" id="input-categoria" placeholder="Ex: TI, Móveis" />
+      </div>
+      <div class="campo">
+        <label>Localização</label>
+        <input type="text" id="input-local" placeholder="Ex: Sala 2" />
+      </div>
+      <div class="campo">
+        <label>Status</label>
+        <select id="combo-status">
+          <option value="Em uso">Em uso</option>
+          <option value="Disponivel">Disponível</option>
+          <option value="Manutencao">Manutenção</option>
+          <option value="Baixado">Baixado</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label>Data de Aquisição</label>
+        <input type="date" id="input-data" />
+      </div>
+      <div class="campo">
+        <label>Valor (R$)</label>
+        <input type="number" id="input-valor" step="0.01" min="0" value="0.00" />
+      </div>
+      <div class="acoes-form">
+        <button type="button" id="btn-salvar">Cadastrar</button>
+        <button type="button" id="btn-cancelar" class="btn-cancelar" style="display:none;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabela-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th class="text-center" style="width: 55px;">ID</th>
+          <th>Patrimônio / Cód.</th>
+          <th>Nome</th>
+          <th>Categoria</th>
+          <th>Localização</th>
+          <th class="text-center">Status</th>
+          <th class="text-center">Aquisição</th>
+          <th class="text-right">Valor (R$)</th>
+        </tr>
+      </thead>
+      <tbody id="corpo-tabela"></tbody>
+    </table>
+  </div>
+
+  <div class="rodape">
+    <span class="dica">Dica: Toque/clique na linha para selecionar | Duplo clique para editar | F2 foca no leitor.</span>
+    <div class="acoes-rodape">
+      <button type="button" class="btn-pdf" id="btn-relatorio-pdf">Relatório Geral PDF</button>
+      <button type="button" class="btn-pdf" id="btn-termo-pdf">Termo PDF (Item)</button>
+      <button type="button" class="btn-exportar" id="btn-exportar-csv">Exportar CSV</button>
+      <button type="button" class="btn-excluir" id="btn-excluir-ativo">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Dados da Empresa -->
+<div class="modal-overlay" id="modal-empresa">
+  <div class="modal">
+    <h2>Configurar Dados da Empresa e Logotipo</h2>
+    <div class="campo">
+      <label>Nome da Empresa</label>
+      <input type="text" id="emp-nome" placeholder="Ex: Minha Empresa Ltda" />
+    </div>
+    <div class="campo">
+      <label>CNPJ</label>
+      <input type="text" id="emp-cnpj" placeholder="Ex: 00.000.000/0001-00" />
+    </div>
+    <div class="campo">
+      <label>Endereço</label>
+      <input type="text" id="emp-endereco" placeholder="Ex: Rua Exemplo, 123 - Centro" />
+    </div>
+    <div class="campo">
+      <label>Logotipo (PNG/JPG)</label>
+      <input type="file" id="emp-logo-file" accept="image/*" />
+      <div class="preview-logo-modal" id="preview-logo-modal"></div>
+    </div>
+    <div class="modal-botoes">
+      <button type="button" class="btn-cancelar" id="btn-remover-logo">Remover Logo</button>
+      <button type="button" class="btn-cancelar" id="btn-fechar-empresa">Cancelar</button>
+      <button type="button" id="btn-salvar-empresa">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Leitor de Câmera -->
+<div class="modal-overlay" id="modal-camera">
+  <div class="modal">
+    <h2>Ler Código de Barras / QR Code</h2>
+    <div id="leitor-camera-box"></div>
+    <p class="status-camera" id="status-camera">Aponte a câmera para o código de barras ou QR Code...</p>
+    <div class="modal-botoes">
+      <button type="button" class="btn-cancelar" id="btn-fechar-camera">Fechar Câmera</button>
+    </div>
+  </div>
+</div>
+
+<div id="area-impressao"></div>
+
+<script>
+  let ativos = [];
+  let empresa = {
+    nome: 'Minha Empresa',
+    cnpj: '',
+    endereco: '',
+    logo: ''
+  };
+
+  try {
+    ativos = JSON.parse(localStorage.getItem('web_ativos_db')) || [];
+  } catch (e) {
+    ativos = [];
+  }
+
+  try {
+    const empSalva = JSON.parse(localStorage.getItem('web_empresa_db'));
+    if (empSalva) {
+      empresa = Object.assign(empresa, empSalva);
+    }
+  } catch (e) {}
+
+  let logoTemporaria = empresa.logo || '';
+  let idEmEdicao = null;
+  let idSelecionado = null;
+  let html5QrCode = null;
+  let destinoCamera = 'busca';
+  let audioCtx = null;
+
+  function tocarBipe() {
+    try {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1800, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.14);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.14);
+      if (navigator.vibrate) {
+        navigator.vibrate(100);
+      }
+    } catch (err) {}
+  }
+
+  function formatarMoeda(valor) {
+    return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  function formatarDataBr(dataIso) {
+    if (!dataIso) return '';
+    const partes = dataIso.split('-');
+    if (partes.length !== 3) return dataIso;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  }
+
+  function dataHojeIso() {
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoje.getDate()).padStart(2, '0');
+    return `${ano}-${mes}-${dia}`;
+  }
+
+  function salvarNoNavegador() {
+    try {
+      localStorage.setItem('web_ativos_db', JSON.stringify(ativos));
+    } catch (e) {
+      alert('Aviso: Limite de armazenamento local atingido.');
+    }
+  }
+
+  function atualizarCabecalhoEmpresa() {
+    document.getElementById('nome-empresa-app').textContent = empresa.nome || 'Minha Empresa';
+    const partes = [];
+    if (empresa.cnpj) partes.push('CNPJ: ' + empresa.cnpj);
+    if (empresa.endereco) partes.push('Endereço: ' + empresa.endereco);
+
+    document.getElementById('detalhes-empresa-app').textContent =
+      partes.length ? partes.join('  |  ') : "Clique em 'Empresa / Logo' para configurar CNPJ e endereço.";
+
+    const logoBox = document.getElementById('logo-app');
+    if (empresa.logo) {
+      logoBox.innerHTML = `<img src="${empresa.logo}" alt="Logo" />`;
+    } else {
+      logoBox.innerHTML = 'SEM<br>LOGO';
+    }
+  }
+
+  function atualizarPreviewLogoModal() {
+    const preview = document.getElementById('preview-logo-modal');
+    if (logoTemporaria) {
+      preview.innerHTML = `<img src="${logoTemporaria}" alt="Pré-visualização" /><span style="font-size:12px; color:#a6e3a1;">Imagem carregada</span>`;
+    } else {
+      preview.innerHTML = `<span style="font-size:12px; color:#a6adc8;">Nenhum logotipo selecionado</span>`;
+    }
+  }
+
+  function abrirModalEmpresa() {
+    document.getElementById('emp-nome').value = empresa.nome || '';
+    document.getElementById('emp-cnpj').value = empresa.cnpj || '';
+    document.getElementById('emp-endereco').value = empresa.endereco || '';
+    document.getElementById('emp-logo-file').value = '';
+    logoTemporaria = empresa.logo || '';
+    atualizarPreviewLogoModal();
+    document.getElementById('modal-empresa').classList.add('ativo');
+  }
+
+  function fecharModalEmpresa() {
+    document.getElementById('modal-empresa').classList.remove('ativo');
+  }
+
+  function redimensionarLogo(dataUrl, callback) {
+    const img = new Image();
+    img.onload = function () {
+      const maxDim = 250;
+      let width = img.width;
+      let height = img.height;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      callback(canvas.toDataURL('image/png'));
+    };
+    img.onerror = function () {
+      callback(dataUrl);
+    };
+    img.src = dataUrl;
+  }
+
+  function carregarImagemLogo(event) {
+    const files = event.target.files;
+    if (!files || !files[0]) return;
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      redimensionarLogo(e.target.result, function (imagemOtimizada) {
+        logoTemporaria = imagemOtimizada;
+        atualizarPreviewLogoModal();
+      });
+    };
+    reader.readAsDataURL(files[0]);
+  }
+
+  function removerLogo() {
+    logoTemporaria = '';
+    document.getElementById('emp-logo-file').value = '';
+    atualizarPreviewLogoModal();
+  }
+
+  function salvarEmpresa() {
+    empresa = {
+      nome: document.getElementById('emp-nome').value.trim() || 'Minha Empresa',
+      cnpj: document.getElementById('emp-cnpj').value.trim(),
+      endereco: document.getElementById('emp-endereco').value.trim(),
+      logo: logoTemporaria
+    };
+    try {
+      localStorage.setItem('web_empresa_db', JSON.stringify(empresa));
+    } catch (e) {
+      alert('Não foi possível salvar a imagem no navegador (arquivo muito grande). Tente uma imagem menor.');
+      return;
+    }
+    atualizarCabecalhoEmpresa();
+    fecharModalEmpresa();
+  }
+
+  function ativarModoLeitor() {
+    const busca = document.getElementById('input-busca');
+    busca.value = '';
+    renderizarTabela();
+    busca.focus();
+  }
+
+  function abrirLeitorCamera(destino) {
+    if (typeof Html5Qrcode === 'undefined') {
+      alert('A biblioteca de câmera ainda está carregando ou você está sem internet.');
+      return;
+    }
+    destinoCamera = destino;
+    tocarBipe();
+    document.getElementById('status-camera').textContent = 'Iniciando câmera...';
+    document.getElementById('modal-camera').classList.add('ativo');
+
+    const formatosSuportados = [
+      Html5QrcodeSupportedFormats.QR_CODE,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.CODE_93,
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.ITF,
+      Html5QrcodeSupportedFormats.CODABAR,
+      Html5QrcodeSupportedFormats.DATA_MATRIX
+    ];
+
+    html5QrCode = new Html5Qrcode('leitor-camera-box', {
+      formatsToSupport: formatosSuportados,
+      verbose: false
+    });
+
+    const config = {
+      fps: 15,
+      qrbox: { width: 260, height: 150 },
+      aspectRatio: 1.5
+    };
+
+    html5QrCode.start(
+      { facingMode: 'environment' },
+      config,
+      (codigoLido) => {
+        tocarBipe();
+        fecharLeitorCamera();
+        processarCodigoLido(codigoLido);
+      },
+      () => {}
+    ).then(() => {
+      document.getElementById('status-camera').textContent = 'Aponte para o código de barras ou QR Code...';
+    }).catch((err) => {
+      document.getElementById('status-camera').textContent =
+        'Erro ao acessar câmera. Verifique a permissão no navegador (HTTPS).';
+    });
+  }
+
+  function fecharLeitorCamera() {
+    document.getElementById('modal-camera').classList.remove('ativo');
+    if (html5QrCode) {
+      html5QrCode.stop().then(() => {
+        html5QrCode.clear();
+        html5QrCode = null;
+      }).catch(() => {
+        html5QrCode = null;
+      });
+    }
+  }
+
+  function processarCodigoLido(codigo) {
+    const limpo = String(codigo).trim();
+    if (!limpo) return;
+
+    if (destinoCamera === 'busca') {
+      const busca = document.getElementById('input-busca');
+      busca.value = limpo;
+      renderizarTabela();
+    } else {
+      const campoPatrimonio = document.getElementById('input-patrimonio');
+      campoPatrimonio.value = limpo;
+      validarCodigoPatrimonio(limpo);
+    }
+  }
+
+  function validarCodigoPatrimonio(codigo) {
+    if (idEmEdicao === null) {
+      const existente = ativos.find(a => a.patrimonio.toLowerCase() === codigo.toLowerCase());
+      if (existente) {
+        if (confirm(`O código '${codigo}' já pertence ao ativo '${existente.nome}'.
+Deseja editar?`)) {
+          carregarParaEdicao(existente.id);
+          return;
+        } else {
+          document.getElementById('input-patrimonio').value = '';
+          return;
+        }
+      }
+    }
+    document.getElementById('input-nome').focus();
+  }
+
+  function salvarAtivo() {
+    const patrimonio = document.getElementById('input-patrimonio').value.trim();
+    const nome = document.getElementById('input-nome').value.trim();
+    const categoria = document.getElementById('input-categoria').value.trim();
+    const localizacao = document.getElementById('input-local').value.trim();
+    const status = document.getElementById('combo-status').value;
+    const data_aquisicao = document.getElementById('input-data').value;
+    const valor = parseFloat(document.getElementById('input-valor').value) || 0;
+
+    if (!patrimonio || !nome) {
+      alert('Preencha pelo menos o Patrimônio e o Nome.');
+      return;
+    }
+
+    if (idEmEdicao === null) {
+      const novoId = ativos.length ? Math.max(...ativos.map(a => a.id)) + 1 : 1;
+      ativos.unshift({ id: novoId, patrimonio, nome, categoria, localizacao, status, data_aquisicao, valor });
+    } else {
+      const idx = ativos.findIndex(a => a.id === idEmEdicao);
+      if (idx !== -1) {
+        ativos[idx] = { id: idEmEdicao, patrimonio, nome, categoria, localizacao, status, data_aquisicao, valor };
+      }
+      cancelarEdicao();
+    }
+
+    salvarNoNavegador();
+    limparCampos();
+    renderizarTabela();
+    document.getElementById('input-patrimonio').focus();
+  }
+
+  function carregarParaEdicao(id) {
+    const ativo = ativos.find(a => a.id === id);
+    if (!ativo) return;
+    idEmEdicao = ativo.id;
+    document.getElementById('input-patrimonio').value = ativo.patrimonio;
+    document.getElementById('input-nome').value = ativo.nome;
+    document.getElementById('input-categoria').value = ativo.categoria;
+    document.getElementById('input-local').value = ativo.localizacao;
+    document.getElementById('combo-status').value = ativo.status || 'Em uso';
+    document.getElementById('input-data').value = ativo.data_aquisicao || dataHojeIso();
+    document.getElementById('input-valor').value = Number(ativo.valor || 0).toFixed(2);
+
+    document.getElementById('btn-salvar').textContent = 'Salvar';
+    document.getElementById('btn-cancelar').style.display = 'inline-block';
+    document.getElementById('input-nome').focus();
+  }
+
+  function cancelarEdicao() {
+    idEmEdicao = null;
+    limparCampos();
+    document.getElementById('btn-salvar').textContent = 'Cadastrar';
+    document.getElementById('btn-cancelar').style.display = 'none';
+  }
+
+  function limparCampos() {
+    document.getElementById('input-patrimonio').value = '';
+    document.getElementById('input-nome').value = '';
+    document.getElementById('input-categoria').value = '';
+    document.getElementById('input-local').value = '';
+    document.getElementById('combo-status').selectedIndex = 0;
+    document.getElementById('input-data').value = dataHojeIso();
+    document.getElementById('input-valor').value = '0.00';
+  }
+
+  function renderizarTabela() {
+    const termo = document.getElementById('input-busca').value.trim().toLowerCase();
+    const tbody = document.getElementById('corpo-tabela');
+    tbody.innerHTML = '';
+
+    const filtrados = ativos.filter(a =>
+      (a.patrimonio || '').toLowerCase().includes(termo) ||
+      (a.nome || '').toLowerCase().includes(termo) ||
+      (a.categoria || '').toLowerCase().includes(termo) ||
+      (a.localizacao || '').toLowerCase().includes(termo) ||
+      (a.status || '').toLowerCase().includes(termo)
+    );
+
+    let somaTotal = 0;
+    filtrados.forEach(ativo => {
+      somaTotal += Number(ativo.valor || 0);
+      const tr = document.createElement('tr');
+      if (ativo.id === idSelecionado) tr.classList.add('selecionada');
+
+      tr.addEventListener('click', () => {
+        idSelecionado = ativo.id;
+        renderizarTabela();
+      });
+      tr.addEventListener('dblclick', () => carregarParaEdicao(ativo.id));
+
+      tr.innerHTML = `
+        <td class="text-center">${ativo.id}</td>
+        <td>${ativo.patrimonio}</td>
+        <td>${ativo.nome}</td>
+        <td>${ativo.categoria}</td>
+        <td>${ativo.localizacao}</td>
+        <td class="text-center">${ativo.status}</td>
+        <td class="text-center">${formatarDataBr(ativo.data_aquisicao)}</td>
+        <td class="text-right">${formatarMoeda(ativo.valor)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('lbl-resumo').textContent =
+      `Total: ${filtrados.length} ativos | Patrimônio: ${formatarMoeda(somaTotal)}`;
+  }
+
+  function excluirAtivo() {
+    if (idSelecionado === null) {
+      alert('Selecione uma linha na tabela para excluir.');
+      return;
+    }
+    const ativo = ativos.find(a => a.id === idSelecionado);
+    if (!ativo) return;
+
+    if (confirm(`Excluir o ativo '${ativo.nome}'?`)) {
+      if (idEmEdicao === idSelecionado) cancelarEdicao();
+      ativos = ativos.filter(a => a.id !== idSelecionado);
+      idSelecionado = null;
+      salvarNoNavegador();
+      renderizarTabela();
+    }
+  }
+
+  function exportarCsv() {
+    let csv = '\uFEFFID;Patrimonio;Nome;Categoria;Localizacao;Status;Data Aquisicao;Valor (R$)\n';
+    [...ativos].reverse().forEach(a => {
+      const valStr = Number(a.valor || 0).toFixed(2).replace('.', ',');
+      csv += `${a.id};"${a.patrimonio}";"${a.nome}";"${a.categoria}";"${a.localizacao}";"${a.status}";"${formatarDataBr(a.data_aquisicao)}";${valStr}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'ativos_completos.csv';
+    link.click();
+  }
+
+  function cabecalhoPdfHtml(tituloDoc) {
+    const logoHtml = empresa.logo
+      ? `<td style="width:90px;"><img src="${empresa.logo}" style="width:80px;" /></td>`
+      : '';
+    let detalhes = '';
+    if (empresa.cnpj) detalhes += `CNPJ: ${empresa.cnpj}<br>`;
+    if (empresa.endereco) detalhes += `${empresa.endereco}<br>`;
+    const hoje = new Date().toLocaleDateString('pt-BR');
+
+    return `
+      <table style="width:100%; border-bottom:2px solid #2c3e50; margin-bottom:15px; padding-bottom:8px;">
+        <tr>
+          ${logoHtml}
+          <td>
+            <strong style="font-size:16pt; color:#2c3e50;">${empresa.nome}</strong><br>
+            <span style="font-size:9pt; color:#555;">${detalhes}</span>
+          </td>
+          <td style="text-align:right; vertical-align:bottom;">
+            <strong style="font-size:12pt; color:#2c3e50;">${tituloDoc}</strong><br>
+            <span style="font-size:9pt; color:#666;">Emissão: ${hoje}</span>
+          </td>
+        </tr>
+      </table>
+    `;
+  }
+
+  function gerarRelatorioPdf() {
+    let linhas = '';
+    let soma = 0;
+    [...ativos].reverse().forEach(a => {
+      soma += Number(a.valor || 0);
+      linhas += `
+        <tr>
+          <td style="border:1px solid #ccc; padding:5px;">${a.patrimonio}</td>
+          <td style="border:1px solid #ccc; padding:5px;">${a.nome}</td>
+          <td style="border:1px solid #ccc; padding:5px;">${a.categoria}</td>
+          <td style="border:1px solid #ccc; padding:5px;">${a.localizacao}</td>
+          <td style="border:1px solid #ccc; padding:5px; text-align:center;">${a.status}</td>
+          <td style="border:1px solid #ccc; padding:5px; text-align:center;">${formatarDataBr(a.data_aquisicao)}</td>
+          <td style="border:1px solid #ccc; padding:5px; text-align:right;">${formatarMoeda(a.valor)}</td>
+        </tr>
+      `;
+    });
+
+    const area = document.getElementById('area-impressao');
+    area.innerHTML = `
+      ${cabecalhoPdfHtml('RELATÓRIO GERAL DE ATIVOS')}
+      <table style="width:100%; border-collapse:collapse; font-size:9pt;">
+        <thead>
+          <tr style="background:#2c3e50; color:#fff;">
+            <th style="padding:6px; text-align:left;">Patrimônio</th>
+            <th style="padding:6px; text-align:left;">Nome do Ativo</th>
+            <th style="padding:6px; text-align:left;">Categoria</th>
+            <th style="padding:6px; text-align:left;">Localização</th>
+            <th style="padding:6px; text-align:center;">Status</th>
+            <th style="padding:6px; text-align:center;">Aquisição</th>
+            <th style="padding:6px; text-align:right;">Valor</th>
+          </tr>
+        </thead>
+        <tbody>${linhas}</tbody>
+      </table>
+      <div style="margin-top:15px; font-weight:bold; text-align:right; font-size:11pt;">
+        Quantidade Total: ${ativos.length} ativos &nbsp;|&nbsp; Valor Patrimonial Total: ${formatarMoeda(soma)}
+      </div>
+    `;
+    window.print();
+  }
+
+  function gerarTermoPdf() {
+    if (idSelecionado === null) {
+      alert('Selecione um ativo na tabela para gerar o Termo.');
+      return;
+    }
+    const ativo = ativos.find(a => a.id === idSelecionado);
+    if (!ativo) return;
+
+    const responsavel = prompt('Nome completo do Colaborador / Responsável:');
+    if (!responsavel || !responsavel.trim()) return;
+
+    const hoje = new Date().toLocaleDateString('pt-BR');
+    const area = document.getElementById('area-impressao');
+    area.innerHTML = `
+      ${cabecalhoPdfHtml('TERMO DE RESPONSABILIDADE')}
+      <p style="line-height:1.6;">Pelo presente termo, eu, <b>${responsavel.trim()}</b>, declaro ter recebido da empresa <b>${empresa.nome}</b>, em perfeito estado de conservação e funcionamento, o equipamento/ativo patrimonial abaixo descrito:</p>
+      <div style="border:1px solid #333; padding:12px; background:#f9f9f9; margin:15px 0; line-height:1.6;">
+        <b>Código / Patrimônio:</b> ${ativo.patrimonio}<br>
+        <b>Descrição do Ativo:</b> ${ativo.nome}<br>
+        <b>Categoria:</b> ${ativo.categoria || 'Não informada'}<br>
+        <b>Localização / Setor:</b> ${ativo.localizacao || 'Não informada'}<br>
+        <b>Valor Estimado:</b> ${formatarMoeda(ativo.valor)}
+      </div>
+      <p style="line-height:1.6;">Comprometo-me a zelar pela guarda, conservação e uso adequado do bem, utilizando-o exclusivamente para fins profissionais, e a comunicá-lo imediatamente ao setor responsável em caso de dano, extravio ou necessidade de manutenção.</p>
+      <p style="margin-top:30px;">Data de entrega: <b>${hoje}</b></p>
+      <div style="margin-top:60px; text-align:center;">
+        _______________________________________________________<br>
+        <b>${responsavel.trim()}</b><br>Assinatura do Responsável
+      </div>
+      <div style="margin-top:60px; text-align:center;">
+        _______________________________________________________<br>
+        <b>${empresa.nome}</b><br>Responsável pelo Patrimônio / TI
+      </div>
+    `;
+    window.print();
+  }
+
+  // Vinculação explícita de todos os eventos após o DOM carregar
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('btn-abrir-empresa').addEventListener('click', abrirModalEmpresa);
+    document.getElementById('btn-fechar-empresa').addEventListener('click', fecharModalEmpresa);
+    document.getElementById('btn-salvar-empresa').addEventListener('click', salvarEmpresa);
+    document.getElementById('btn-remover-logo').addEventListener('click', removerLogo);
+    document.getElementById('emp-logo-file').addEventListener('change', carregarImagemLogo);
+
+    document.getElementById('btn-ler-busca').addEventListener('click', () => abrirLeitorCamera('busca'));
+    document.getElementById('btn-ler-form').addEventListener('click', () => abrirLeitorCamera('form'));
+    document.getElementById('btn-fechar-camera').addEventListener('click', fecharLeitorCamera);
+    document.getElementById('btn-foco-leitor').addEventListener('click', ativarModoLeitor);
+
+    document.getElementById('input-busca').addEventListener('input', renderizarTabela);
+    document.getElementById('input-patrimonio').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const codigo = event.target.value.trim();
+        if (codigo) validarCodigoPatrimonio(codigo);
+      }
+    });
+
+    document.getElementById('btn-salvar').addEventListener('click', salvarAtivo);
+    document.getElementById('btn-cancelar').addEventListener('click', cancelarEdicao);
+    document.getElementById('btn-relatorio-pdf').addEventListener('click', gerarRelatorioPdf);
+    document.getElementById('btn-termo-pdf').addEventListener('click', gerarTermoPdf);
+    document.getElementById('btn-exportar-csv').addEventListener('click', exportarCsv);
+    document.getElementById('btn-excluir-ativo').addEventListener('click', excluirAtivo);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F2') {
+        e.preventDefault();
+        ativarModoLeitor();
+      }
+    });
+
+    document.getElementById('input-data').value = dataHojeIso();
+    atualizarCabecalhoEmpresa();
+    renderizarTabela();
+  });
+</script>
+</body>
+</html>
