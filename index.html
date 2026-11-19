@@ -46,10 +46,55 @@
       line-height: 1.4;
     }
 
-    .container {
-      max-width: 1240px;
-      margin: 0 auto;
+    /* TELA DE LOGIN */
+    .login-wrapper {
+      position: fixed;
+      inset: 0;
+      background-color: var(--bg-main);
       display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 200;
+    }
+
+    .login-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .login-card h2 {
+      color: var(--white);
+      font-size: 20px;
+      text-align: center;
+    }
+
+    .login-card p {
+      color: var(--text-muted);
+      font-size: 13px;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .login-erro {
+      color: var(--red);
+      font-size: 12px;
+      text-align: center;
+      display: none;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: none;
       flex-direction: column;
       gap: 14px;
     }
@@ -180,7 +225,7 @@
 
     .grid-form {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 10px;
       align-items: end;
     }
@@ -226,7 +271,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 760px;
+      min-width: 860px;
     }
 
     th {
@@ -367,7 +412,7 @@
         color: #222222 !important;
         padding: 0;
       }
-      .container, .modal-overlay {
+      .container, .modal-overlay, .login-wrapper {
         display: none !important;
       }
       #area-impressao {
@@ -380,24 +425,44 @@
 </head>
 <body>
 
-<div class="container">
+<!-- TELA DE LOGIN -->
+<div class="login-wrapper" id="tela-login">
+  <form class="login-card" id="form-login">
+    <h2>Gestão de Ativos</h2>
+    <p>Faça login para acessar o patrimônio</p>
+    <div class="campo">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seu@email.com" required />
+    </div>
+    <div class="campo">
+      <label>Senha</label>
+      <input type="password" id="login-senha" placeholder="••••••••" required />
+    </div>
+    <p class="login-erro" id="login-erro">E-mail ou senha inválidos.</p>
+    <button type="submit" id="btn-entrar" style="height: 40px; margin-top: 4px;">Entrar</button>
+  </form>
+</div>
+
+<!-- SISTEMA PRINCIPAL -->
+<div class="container" id="app-container">
   <div class="cabecalho-empresa">
     <div class="empresa-esquerda">
       <div class="logo-box" id="logo-app">SEM<br>LOGO</div>
       <div class="empresa-info">
-        <h1 id="nome-empresa-app">Minha Empresa</h1>
+        <h1 id="nome-empresa-app">Carregando...</h1>
         <p id="detalhes-empresa-app">Sincronizando com a nuvem...</p>
       </div>
     </div>
-    <div style="display:flex; gap:8px;">
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
       <button type="button" class="btn-exportar" id="btn-sincronizar" title="Atualizar dados da nuvem">Atualizar</button>
       <button type="button" class="btn-config" id="btn-abrir-empresa">Empresa / Logo</button>
+      <button type="button" class="btn-excluir" id="btn-sair">Sair</button>
     </div>
   </div>
 
   <div class="barra-topo">
     <div class="busca-grupo">
-      <input type="text" id="input-busca" placeholder="Bipe o código de barras ou digite para filtrar..." />
+      <input type="text" id="input-busca" placeholder="Bipe o código, número de série ou digite para filtrar..." />
       <button type="button" class="btn-leitor" id="btn-ler-busca">Ler Câmera</button>
       <button type="button" class="btn-leitor" id="btn-foco-leitor">Leitor (F2)</button>
     </div>
@@ -411,6 +476,13 @@
         <div class="input-com-botao">
           <input type="text" id="input-patrimonio" placeholder="Bipe ou digite *" />
           <button type="button" class="btn-leitor" id="btn-ler-form" title="Ler com câmera">Câm</button>
+        </div>
+      </div>
+      <div class="campo">
+        <label>Número de Série</label>
+        <div class="input-com-botao">
+          <input type="text" id="input-serie" placeholder="Ex: SN12345678" />
+          <button type="button" class="btn-leitor" id="btn-ler-serie" title="Ler série com câmera">Câm</button>
         </div>
       </div>
       <div class="campo">
@@ -455,6 +527,7 @@
         <tr>
           <th class="text-center" style="width: 55px;">ID</th>
           <th>Patrimônio / Cód.</th>
+          <th>Nº de Série</th>
           <th>Nome</th>
           <th>Categoria</th>
           <th>Localização</th>
@@ -478,7 +551,7 @@
   </div>
 </div>
 
-<!-- Modal Dados da Empresa -->
+<!-- Modal Empresa -->
 <div class="modal-overlay" id="modal-empresa">
   <div class="modal">
     <h2>Configurar Dados da Empresa e Logotipo</h2>
@@ -507,7 +580,7 @@
   </div>
 </div>
 
-<!-- Modal Leitor de Câmera -->
+<!-- Modal Câmera -->
 <div class="modal-overlay" id="modal-camera">
   <div class="modal">
     <h2>Ler Código de Barras / QR Code</h2>
@@ -522,17 +595,12 @@
 <div id="area-impressao"></div>
 
 <script>
+  // =========================================================================
+  // CONFIGURAÇÃO DO SUPABASE
+  // =========================================================================
   const SUPABASE_URL = 'https://grtpgzwrddkjjgngpxmf.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_DlAMSSbhkvtPasHfqFNfAQ_LWK3mXXM';
-  let db = null;
-
-  try {
-    if (window.supabase && typeof window.supabase.createClient === 'function') {
-      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    }
-  } catch (e) {
-    console.error('Erro ao inicializar Supabase:', e);
-  }
+  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   let ativos = [];
   let empresa = {
@@ -548,16 +616,76 @@
   let html5QrCode = null;
   let destinoCamera = 'busca';
   let audioCtx = null;
+  let realtimeInscrito = false;
 
-  async function carregarDadosNuvem() {
-    const btnSync = document.getElementById('btn-sincronizar');
-    const detalhesEl = document.getElementById('detalhes-empresa-app');
-
-    if (!db) {
-      detalhesEl.textContent = 'Erro: Biblioteca Supabase não carregou (verifique sua internet).';
-      return;
+  // =========================================================================
+  // AUTENTICAÇÃO (LOGIN / LOGOUT)
+  // =========================================================================
+  async function verificarSessao() {
+    const { data: { session } } = await db.auth.getSession();
+    if (session) {
+      mostrarSistema();
+    } else {
+      mostrarLogin();
     }
 
+    db.auth.onAuthStateChange((_event, sessionAtual) => {
+      if (sessionAtual) {
+        mostrarSistema();
+      } else {
+        mostrarLogin();
+      }
+    });
+  }
+
+  function mostrarSistema() {
+    document.getElementById('tela-login').style.display = 'none';
+    document.getElementById('app-container').style.display = 'flex';
+    carregarDadosNuvem();
+    if (!realtimeInscrito) {
+      iniciarRealtime();
+      realtimeInscrito = true;
+    }
+  }
+
+  function mostrarLogin() {
+    document.getElementById('tela-login').style.display = 'flex';
+    document.getElementById('app-container').style.display = 'none';
+  }
+
+  async function fazerLogin(event) {
+    event.preventDefault();
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-senha').value;
+    const btnEntrar = document.getElementById('btn-entrar');
+    const lblErro = document.getElementById('login-erro');
+
+    lblErro.style.display = 'none';
+    btnEntrar.disabled = true;
+    btnEntrar.textContent = 'Entrando...';
+
+    const { error } = await db.auth.signInWithPassword({ email, password });
+
+    btnEntrar.disabled = false;
+    btnEntrar.textContent = 'Entrar';
+
+    if (error) {
+      lblErro.textContent = 'E-mail ou senha incorretos.';
+      lblErro.style.display = 'block';
+    }
+  }
+
+  async function fazerLogout() {
+    if (confirm('Deseja sair do sistema?')) {
+      await db.auth.signOut();
+    }
+  }
+
+  // =========================================================================
+  // SINCRONIZAÇÃO COM O SUPABASE
+  // =========================================================================
+  async function carregarDadosNuvem() {
+    const btnSync = document.getElementById('btn-sincronizar');
     btnSync.disabled = true;
     btnSync.textContent = 'Sincronizando...';
 
@@ -566,11 +694,9 @@
         .from('empresa_config')
         .select('*')
         .eq('id', 1)
-        .maybeSingle();
+        .single();
 
-      if (empError) {
-        console.warn('Aviso empresa_config:', empError.message);
-      } else if (empData) {
+      if (!empError && empData) {
         empresa = empData;
       }
       atualizarCabecalhoEmpresa();
@@ -584,9 +710,9 @@
       ativos = ativosData || [];
       renderizarTabela();
     } catch (err) {
-      console.error('Erro Supabase:', err);
-      atualizarCabecalhoEmpresa();
-      detalhesEl.textContent = 'Aviso: Não foi possível carregar da nuvem (' + (err.message || 'verifique o SQL no Supabase') + ')';
+      console.error(err);
+      document.getElementById('detalhes-empresa-app').textContent =
+        'Aviso: Não foi possível carregar da nuvem (' + (err.message || 'verifique permissões') + ')';
     } finally {
       btnSync.disabled = false;
       btnSync.textContent = 'Atualizar';
@@ -594,21 +720,19 @@
   }
 
   function iniciarRealtime() {
-    if (!db) return;
-    try {
-      db.channel('mudancas-gerais')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'ativos' }, () => {
-          carregarDadosNuvem();
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'empresa_config' }, () => {
-          carregarDadosNuvem();
-        })
-        .subscribe();
-    } catch (e) {
-      console.warn('Realtime não iniciado:', e);
-    }
+    db.channel('mudancas-gerais')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ativos' }, () => {
+        carregarDadosNuvem();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'empresa_config' }, () => {
+        carregarDadosNuvem();
+      })
+      .subscribe();
   }
 
+  // =========================================================================
+  // UTILITÁRIOS
+  // =========================================================================
   function tocarBipe() {
     try {
       if (!audioCtx) {
@@ -656,6 +780,9 @@
     return `${ano}-${mes}-${dia}`;
   }
 
+  // =========================================================================
+  // EMPRESA E LOGOTIPO
+  // =========================================================================
   function atualizarCabecalhoEmpresa() {
     document.getElementById('nome-empresa-app').textContent = empresa.nome || 'Minha Empresa';
     const partes = [];
@@ -744,11 +871,6 @@
   }
 
   async function salvarEmpresa() {
-    if (!db) {
-      alert('Sem conexão com o banco de dados Supabase.');
-      return;
-    }
-
     const btnSalvarEmp = document.getElementById('btn-salvar-empresa');
     btnSalvarEmp.disabled = true;
     btnSalvarEmp.textContent = 'Salvando...';
@@ -778,6 +900,9 @@
     fecharModalEmpresa();
   }
 
+  // =========================================================================
+  // LEITOR DE CÓDIGO DE BARRAS / CÂMERA
+  // =========================================================================
   function ativarModoLeitor() {
     const busca = document.getElementById('input-busca');
     busca.value = '';
@@ -857,6 +982,9 @@
       const busca = document.getElementById('input-busca');
       busca.value = limpo;
       renderizarTabela();
+    } else if (destinoCamera === 'serie') {
+      document.getElementById('input-serie').value = limpo;
+      document.getElementById('input-nome').focus();
     } else {
       const campoPatrimonio = document.getElementById('input-patrimonio');
       campoPatrimonio.value = limpo;
@@ -877,16 +1005,15 @@
         }
       }
     }
-    document.getElementById('input-nome').focus();
+    document.getElementById('input-serie').focus();
   }
 
+  // =========================================================================
+  // CRUD DE ATIVOS (SUPABASE)
+  // =========================================================================
   async function salvarAtivo() {
-    if (!db) {
-      alert('Sem conexão com o banco de dados Supabase.');
-      return;
-    }
-
     const patrimonio = document.getElementById('input-patrimonio').value.trim();
+    const numero_serie = document.getElementById('input-serie').value.trim();
     const nome = document.getElementById('input-nome').value.trim();
     const categoria = document.getElementById('input-categoria').value.trim();
     const localizacao = document.getElementById('input-local').value.trim();
@@ -903,7 +1030,7 @@
     btnSalvar.disabled = true;
     btnSalvar.textContent = 'Salvando...';
 
-    const payload = { patrimonio, nome, categoria, localizacao, status, data_aquisicao, valor };
+    const payload = { patrimonio, numero_serie, nome, categoria, localizacao, status, data_aquisicao, valor };
 
     if (idEmEdicao === null) {
       const { error } = await db.from('ativos').insert([payload]);
@@ -932,6 +1059,7 @@
     if (!ativo) return;
     idEmEdicao = ativo.id;
     document.getElementById('input-patrimonio').value = ativo.patrimonio;
+    document.getElementById('input-serie').value = ativo.numero_serie || '';
     document.getElementById('input-nome').value = ativo.nome;
     document.getElementById('input-categoria').value = ativo.categoria || '';
     document.getElementById('input-local').value = ativo.localizacao || '';
@@ -953,6 +1081,7 @@
 
   function limparCampos() {
     document.getElementById('input-patrimonio').value = '';
+    document.getElementById('input-serie').value = '';
     document.getElementById('input-nome').value = '';
     document.getElementById('input-categoria').value = '';
     document.getElementById('input-local').value = '';
@@ -968,6 +1097,7 @@
 
     const filtrados = ativos.filter(a =>
       (a.patrimonio || '').toLowerCase().includes(termo) ||
+      (a.numero_serie || '').toLowerCase().includes(termo) ||
       (a.nome || '').toLowerCase().includes(termo) ||
       (a.categoria || '').toLowerCase().includes(termo) ||
       (a.localizacao || '').toLowerCase().includes(termo) ||
@@ -989,6 +1119,7 @@
       tr.innerHTML = `
         <td class="text-center">${ativo.id}</td>
         <td>${ativo.patrimonio}</td>
+        <td>${ativo.numero_serie || ''}</td>
         <td>${ativo.nome}</td>
         <td>${ativo.categoria || ''}</td>
         <td>${ativo.localizacao || ''}</td>
@@ -1025,11 +1156,14 @@
     }
   }
 
+  // =========================================================================
+  // EXPORTAÇÃO E RELATÓRIOS PDF
+  // =========================================================================
   function exportarCsv() {
-    let csv = '\uFEFFID;Patrimonio;Nome;Categoria;Localizacao;Status;Data Aquisicao;Valor (R$)\n';
+    let csv = '\uFEFFID;Patrimonio;Numero de Serie;Nome;Categoria;Localizacao;Status;Data Aquisicao;Valor (R$)\n';
     [...ativos].reverse().forEach(a => {
       const valStr = Number(a.valor || 0).toFixed(2).replace('.', ',');
-      csv += `${a.id};"${a.patrimonio}";"${a.nome}";"${a.categoria || ''}";"${a.localizacao || ''}";"${a.status}";"${formatarDataBr(a.data_aquisicao)}";${valStr}\n`;
+      csv += `${a.id};"${a.patrimonio}";"${a.numero_serie || ''}";"${a.nome}";"${a.categoria || ''}";"${a.localizacao || ''}";"${a.status}";"${formatarDataBr(a.data_aquisicao)}";${valStr}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1073,6 +1207,7 @@
       linhas += `
         <tr>
           <td style="border:1px solid #ccc; padding:5px;">${a.patrimonio}</td>
+          <td style="border:1px solid #ccc; padding:5px;">${a.numero_serie || ''}</td>
           <td style="border:1px solid #ccc; padding:5px;">${a.nome}</td>
           <td style="border:1px solid #ccc; padding:5px;">${a.categoria || ''}</td>
           <td style="border:1px solid #ccc; padding:5px;">${a.localizacao || ''}</td>
@@ -1086,10 +1221,11 @@
     const area = document.getElementById('area-impressao');
     area.innerHTML = `
       ${cabecalhoPdfHtml('RELATÓRIO GERAL DE ATIVOS')}
-      <table style="width:100%; border-collapse:collapse; font-size:9pt;">
+      <table style="width:100%; border-collapse:collapse; font-size:8.5pt;">
         <thead>
           <tr style="background:#2c3e50; color:#fff;">
             <th style="padding:6px; text-align:left;">Patrimônio</th>
+            <th style="padding:6px; text-align:left;">Nº de Série</th>
             <th style="padding:6px; text-align:left;">Nome do Ativo</th>
             <th style="padding:6px; text-align:left;">Categoria</th>
             <th style="padding:6px; text-align:left;">Localização</th>
@@ -1125,6 +1261,7 @@
       <p style="line-height:1.6;">Pelo presente termo, eu, <b>${responsavel.trim()}</b>, declaro ter recebido da empresa <b>${empresa.nome}</b>, em perfeito estado de conservação e funcionamento, o equipamento/ativo patrimonial abaixo descrito:</p>
       <div style="border:1px solid #333; padding:12px; background:#f9f9f9; margin:15px 0; line-height:1.6;">
         <b>Código / Patrimônio:</b> ${ativo.patrimonio}<br>
+        <b>Número de Série:</b> ${ativo.numero_serie || 'Não informado'}<br>
         <b>Descrição do Ativo:</b> ${ativo.nome}<br>
         <b>Categoria:</b> ${ativo.categoria || 'Não informada'}<br>
         <b>Localização / Setor:</b> ${ativo.localizacao || 'Não informada'}<br>
@@ -1144,7 +1281,13 @@
     window.print();
   }
 
+  // =========================================================================
+  // EVENTOS INICIAIS
+  // =========================================================================
   document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('form-login').addEventListener('submit', fazerLogin);
+    document.getElementById('btn-sair').addEventListener('click', fazerLogout);
+
     document.getElementById('btn-sincronizar').addEventListener('click', carregarDadosNuvem);
     document.getElementById('btn-abrir-empresa').addEventListener('click', abrirModalEmpresa);
     document.getElementById('btn-fechar-empresa').addEventListener('click', fecharModalEmpresa);
@@ -1154,6 +1297,7 @@
 
     document.getElementById('btn-ler-busca').addEventListener('click', () => abrirLeitorCamera('busca'));
     document.getElementById('btn-ler-form').addEventListener('click', () => abrirLeitorCamera('form'));
+    document.getElementById('btn-ler-serie').addEventListener('click', () => abrirLeitorCamera('serie'));
     document.getElementById('btn-fechar-camera').addEventListener('click', fecharLeitorCamera);
     document.getElementById('btn-foco-leitor').addEventListener('click', ativarModoLeitor);
 
@@ -1181,9 +1325,7 @@
     });
 
     document.getElementById('input-data').value = dataHojeIso();
-    
-    carregarDadosNuvem();
-    iniciarRealtime();
+    verificarSessao();
   });
 </script>
 </body>
