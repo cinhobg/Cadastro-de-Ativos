@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gestão de Ativos - Web</title>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg-main: #1e1e2e;
@@ -135,6 +136,7 @@
     }
 
     button:hover { background-color: var(--blue-hover); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-excluir { background-color: var(--red); }
     .btn-excluir:hover { background-color: var(--red-hover); }
     .btn-exportar { background-color: var(--green); }
@@ -384,10 +386,13 @@
       <div class="logo-box" id="logo-app">SEM<br>LOGO</div>
       <div class="empresa-info">
         <h1 id="nome-empresa-app">Minha Empresa</h1>
-        <p id="detalhes-empresa-app">Clique em 'Empresa / Logo' para configurar CNPJ e endereço.</p>
+        <p id="detalhes-empresa-app">Sincronizando com a nuvem...</p>
       </div>
     </div>
-    <button type="button" class="btn-config" id="btn-abrir-empresa">Empresa / Logo</button>
+    <div style="display:flex; gap:8px;">
+      <button type="button" class="btn-exportar" id="btn-sincronizar" title="Atualizar dados da nuvem">Atualizar</button>
+      <button type="button" class="btn-config" id="btn-abrir-empresa">Empresa / Logo</button>
+    </div>
   </div>
 
   <div class="barra-topo">
@@ -517,6 +522,18 @@
 <div id="area-impressao"></div>
 
 <script>
+  const SUPABASE_URL = 'https://grtpgzwrddkjjgngpxmf.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_DlAMSSbhkvtPasHfqFNfAQ_LWK3mXXM';
+  let db = null;
+
+  try {
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+  } catch (e) {
+    console.error('Erro ao inicializar Supabase:', e);
+  }
+
   let ativos = [];
   let empresa = {
     nome: 'Minha Empresa',
@@ -525,25 +542,72 @@
     logo: ''
   };
 
-  try {
-    ativos = JSON.parse(localStorage.getItem('web_ativos_db')) || [];
-  } catch (e) {
-    ativos = [];
-  }
-
-  try {
-    const empSalva = JSON.parse(localStorage.getItem('web_empresa_db'));
-    if (empSalva) {
-      empresa = Object.assign(empresa, empSalva);
-    }
-  } catch (e) {}
-
-  let logoTemporaria = empresa.logo || '';
+  let logoTemporaria = '';
   let idEmEdicao = null;
   let idSelecionado = null;
   let html5QrCode = null;
   let destinoCamera = 'busca';
   let audioCtx = null;
+
+  async function carregarDadosNuvem() {
+    const btnSync = document.getElementById('btn-sincronizar');
+    const detalhesEl = document.getElementById('detalhes-empresa-app');
+
+    if (!db) {
+      detalhesEl.textContent = 'Erro: Biblioteca Supabase não carregou (verifique sua internet).';
+      return;
+    }
+
+    btnSync.disabled = true;
+    btnSync.textContent = 'Sincronizando...';
+
+    try {
+      const { data: empData, error: empError } = await db
+        .from('empresa_config')
+        .select('*')
+        .eq('id', 1)
+        .maybeSingle();
+
+      if (empError) {
+        console.warn('Aviso empresa_config:', empError.message);
+      } else if (empData) {
+        empresa = empData;
+      }
+      atualizarCabecalhoEmpresa();
+
+      const { data: ativosData, error: ativosError } = await db
+        .from('ativos')
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (ativosError) throw ativosError;
+      ativos = ativosData || [];
+      renderizarTabela();
+    } catch (err) {
+      console.error('Erro Supabase:', err);
+      atualizarCabecalhoEmpresa();
+      detalhesEl.textContent = 'Aviso: Não foi possível carregar da nuvem (' + (err.message || 'verifique o SQL no Supabase') + ')';
+    } finally {
+      btnSync.disabled = false;
+      btnSync.textContent = 'Atualizar';
+    }
+  }
+
+  function iniciarRealtime() {
+    if (!db) return;
+    try {
+      db.channel('mudancas-gerais')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'ativos' }, () => {
+          carregarDadosNuvem();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'empresa_config' }, () => {
+          carregarDadosNuvem();
+        })
+        .subscribe();
+    } catch (e) {
+      console.warn('Realtime não iniciado:', e);
+    }
+  }
 
   function tocarBipe() {
     try {
@@ -590,14 +654,6 @@
     const mes = String(hoje.getMonth() + 1).padStart(2, '0');
     const dia = String(hoje.getDate()).padStart(2, '0');
     return `${ano}-${mes}-${dia}`;
-  }
-
-  function salvarNoNavegador() {
-    try {
-      localStorage.setItem('web_ativos_db', JSON.stringify(ativos));
-    } catch (e) {
-      alert('Aviso: Limite de armazenamento local atingido.');
-    }
   }
 
   function atualizarCabecalhoEmpresa() {
@@ -687,19 +743,37 @@
     atualizarPreviewLogoModal();
   }
 
-  function salvarEmpresa() {
-    empresa = {
+  async function salvarEmpresa() {
+    if (!db) {
+      alert('Sem conexão com o banco de dados Supabase.');
+      return;
+    }
+
+    const btnSalvarEmp = document.getElementById('btn-salvar-empresa');
+    btnSalvarEmp.disabled = true;
+    btnSalvarEmp.textContent = 'Salvando...';
+
+    const dadosEmpresa = {
+      id: 1,
       nome: document.getElementById('emp-nome').value.trim() || 'Minha Empresa',
       cnpj: document.getElementById('emp-cnpj').value.trim(),
       endereco: document.getElementById('emp-endereco').value.trim(),
       logo: logoTemporaria
     };
-    try {
-      localStorage.setItem('web_empresa_db', JSON.stringify(empresa));
-    } catch (e) {
-      alert('Não foi possível salvar a imagem no navegador (arquivo muito grande). Tente uma imagem menor.');
+
+    const { error } = await db
+      .from('empresa_config')
+      .upsert(dadosEmpresa);
+
+    btnSalvarEmp.disabled = false;
+    btnSalvarEmp.textContent = 'Salvar';
+
+    if (error) {
+      alert('Erro ao salvar dados da empresa na nuvem: ' + error.message);
       return;
     }
+
+    empresa = dadosEmpresa;
     atualizarCabecalhoEmpresa();
     fecharModalEmpresa();
   }
@@ -757,7 +831,7 @@
       () => {}
     ).then(() => {
       document.getElementById('status-camera').textContent = 'Aponte para o código de barras ou QR Code...';
-    }).catch((err) => {
+    }).catch(() => {
       document.getElementById('status-camera').textContent =
         'Erro ao acessar câmera. Verifique a permissão no navegador (HTTPS).';
     });
@@ -794,8 +868,7 @@
     if (idEmEdicao === null) {
       const existente = ativos.find(a => a.patrimonio.toLowerCase() === codigo.toLowerCase());
       if (existente) {
-        if (confirm(`O código '${codigo}' já pertence ao ativo '${existente.nome}'.
-Deseja editar?`)) {
+        if (confirm(`O código '${codigo}' já pertence ao ativo '${existente.nome}'.\nDeseja editar?`)) {
           carregarParaEdicao(existente.id);
           return;
         } else {
@@ -807,7 +880,12 @@ Deseja editar?`)) {
     document.getElementById('input-nome').focus();
   }
 
-  function salvarAtivo() {
+  async function salvarAtivo() {
+    if (!db) {
+      alert('Sem conexão com o banco de dados Supabase.');
+      return;
+    }
+
     const patrimonio = document.getElementById('input-patrimonio').value.trim();
     const nome = document.getElementById('input-nome').value.trim();
     const categoria = document.getElementById('input-categoria').value.trim();
@@ -821,20 +899,31 @@ Deseja editar?`)) {
       return;
     }
 
+    const btnSalvar = document.getElementById('btn-salvar');
+    btnSalvar.disabled = true;
+    btnSalvar.textContent = 'Salvando...';
+
+    const payload = { patrimonio, nome, categoria, localizacao, status, data_aquisicao, valor };
+
     if (idEmEdicao === null) {
-      const novoId = ativos.length ? Math.max(...ativos.map(a => a.id)) + 1 : 1;
-      ativos.unshift({ id: novoId, patrimonio, nome, categoria, localizacao, status, data_aquisicao, valor });
-    } else {
-      const idx = ativos.findIndex(a => a.id === idEmEdicao);
-      if (idx !== -1) {
-        ativos[idx] = { id: idEmEdicao, patrimonio, nome, categoria, localizacao, status, data_aquisicao, valor };
+      const { error } = await db.from('ativos').insert([payload]);
+      if (error) {
+        alert('Erro ao cadastrar ativo: ' + error.message);
       }
-      cancelarEdicao();
+    } else {
+      const { error } = await db.from('ativos').update(payload).eq('id', idEmEdicao);
+      if (error) {
+        alert('Erro ao atualizar ativo: ' + error.message);
+      } else {
+        cancelarEdicao();
+      }
     }
 
-    salvarNoNavegador();
+    btnSalvar.disabled = false;
+    btnSalvar.textContent = idEmEdicao === null ? 'Cadastrar' : 'Salvar';
+
     limparCampos();
-    renderizarTabela();
+    await carregarDadosNuvem();
     document.getElementById('input-patrimonio').focus();
   }
 
@@ -844,8 +933,8 @@ Deseja editar?`)) {
     idEmEdicao = ativo.id;
     document.getElementById('input-patrimonio').value = ativo.patrimonio;
     document.getElementById('input-nome').value = ativo.nome;
-    document.getElementById('input-categoria').value = ativo.categoria;
-    document.getElementById('input-local').value = ativo.localizacao;
+    document.getElementById('input-categoria').value = ativo.categoria || '';
+    document.getElementById('input-local').value = ativo.localizacao || '';
     document.getElementById('combo-status').value = ativo.status || 'Em uso';
     document.getElementById('input-data').value = ativo.data_aquisicao || dataHojeIso();
     document.getElementById('input-valor').value = Number(ativo.valor || 0).toFixed(2);
@@ -901,8 +990,8 @@ Deseja editar?`)) {
         <td class="text-center">${ativo.id}</td>
         <td>${ativo.patrimonio}</td>
         <td>${ativo.nome}</td>
-        <td>${ativo.categoria}</td>
-        <td>${ativo.localizacao}</td>
+        <td>${ativo.categoria || ''}</td>
+        <td>${ativo.localizacao || ''}</td>
         <td class="text-center">${ativo.status}</td>
         <td class="text-center">${formatarDataBr(ativo.data_aquisicao)}</td>
         <td class="text-right">${formatarMoeda(ativo.valor)}</td>
@@ -914,7 +1003,7 @@ Deseja editar?`)) {
       `Total: ${filtrados.length} ativos | Patrimônio: ${formatarMoeda(somaTotal)}`;
   }
 
-  function excluirAtivo() {
+  async function excluirAtivo() {
     if (idSelecionado === null) {
       alert('Selecione uma linha na tabela para excluir.');
       return;
@@ -924,10 +1013,15 @@ Deseja editar?`)) {
 
     if (confirm(`Excluir o ativo '${ativo.nome}'?`)) {
       if (idEmEdicao === idSelecionado) cancelarEdicao();
-      ativos = ativos.filter(a => a.id !== idSelecionado);
+      
+      const { error } = await db.from('ativos').delete().eq('id', idSelecionado);
+      if (error) {
+        alert('Erro ao excluir: ' + error.message);
+        return;
+      }
+
       idSelecionado = null;
-      salvarNoNavegador();
-      renderizarTabela();
+      await carregarDadosNuvem();
     }
   }
 
@@ -935,7 +1029,7 @@ Deseja editar?`)) {
     let csv = '\uFEFFID;Patrimonio;Nome;Categoria;Localizacao;Status;Data Aquisicao;Valor (R$)\n';
     [...ativos].reverse().forEach(a => {
       const valStr = Number(a.valor || 0).toFixed(2).replace('.', ',');
-      csv += `${a.id};"${a.patrimonio}";"${a.nome}";"${a.categoria}";"${a.localizacao}";"${a.status}";"${formatarDataBr(a.data_aquisicao)}";${valStr}\n`;
+      csv += `${a.id};"${a.patrimonio}";"${a.nome}";"${a.categoria || ''}";"${a.localizacao || ''}";"${a.status}";"${formatarDataBr(a.data_aquisicao)}";${valStr}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -980,8 +1074,8 @@ Deseja editar?`)) {
         <tr>
           <td style="border:1px solid #ccc; padding:5px;">${a.patrimonio}</td>
           <td style="border:1px solid #ccc; padding:5px;">${a.nome}</td>
-          <td style="border:1px solid #ccc; padding:5px;">${a.categoria}</td>
-          <td style="border:1px solid #ccc; padding:5px;">${a.localizacao}</td>
+          <td style="border:1px solid #ccc; padding:5px;">${a.categoria || ''}</td>
+          <td style="border:1px solid #ccc; padding:5px;">${a.localizacao || ''}</td>
           <td style="border:1px solid #ccc; padding:5px; text-align:center;">${a.status}</td>
           <td style="border:1px solid #ccc; padding:5px; text-align:center;">${formatarDataBr(a.data_aquisicao)}</td>
           <td style="border:1px solid #ccc; padding:5px; text-align:right;">${formatarMoeda(a.valor)}</td>
@@ -1050,8 +1144,8 @@ Deseja editar?`)) {
     window.print();
   }
 
-  // Vinculação explícita de todos os eventos após o DOM carregar
   document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('btn-sincronizar').addEventListener('click', carregarDadosNuvem);
     document.getElementById('btn-abrir-empresa').addEventListener('click', abrirModalEmpresa);
     document.getElementById('btn-fechar-empresa').addEventListener('click', fecharModalEmpresa);
     document.getElementById('btn-salvar-empresa').addEventListener('click', salvarEmpresa);
@@ -1087,8 +1181,9 @@ Deseja editar?`)) {
     });
 
     document.getElementById('input-data').value = dataHojeIso();
-    atualizarCabecalhoEmpresa();
-    renderizarTabela();
+    
+    carregarDadosNuvem();
+    iniciarRealtime();
   });
 </script>
 </body>
